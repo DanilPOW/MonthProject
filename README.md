@@ -1,140 +1,163 @@
-# Learning Platform API
+# Learning Platform - Веб-сервис для совместного обучения программированию
 
-Веб-сайт для совместного обучения программированию на FastAPI.
+Минимальное API на FastAPI и React фронтенд для веб-сервиса совместного обучения.
 
-## Возможности
+## Структура проекта
 
-- Регистрация и аутентификация пользователей (JWT)
-- Управление треками обучения
-- Запись на треки и выход из них (до начала трека)
-- Автоматический запуск трека при достижении нужного количества участников
-- Последовательное выполнение заданий с дедлайнами
-- Уведомления о приближающемся дедлайне (80% времени) через WebSocket
-- Этап код-ривью после дедлайна (каждый должен оценить 3 человек)
-- Фиксированные критерии код-ривью, задаваемые при создании трека
-- Дневник для комментариев под каждым заданием
-- Отправка решений через ссылку на репозиторий
+```
+api/
+├── backend/          # FastAPI приложение
+│   ├── main.py      # Основной файл API
+│   ├── models.py    # SQLAlchemy модели
+│   ├── schemas.py   # Pydantic схемы
+│   ├── database.py  # Настройка БД
+│   ├── auth.py      # Аутентификация JWT
+│   └── requirements.txt
+└── frontend/        # React приложение
+    ├── src/
+    │   ├── App.jsx
+    │   ├── api.js
+    │   └── components/
+    └── package.json
+```
 
-## Установка
+## Установка и запуск
 
-1. Убедитесь, что у вас установлен Python 3.11 или 3.12:
+### Backend
+
+1. Перейдите в папку backend:
 ```bash
-python --version
+cd backend
 ```
 
 2. Создайте виртуальное окружение (рекомендуется):
 ```bash
 python -m venv venv
-# Windows
-venv\Scripts\activate
-# Linux/Mac
-source venv/bin/activate
 ```
 
-3. Установите зависимости:
+3. Активируйте виртуальное окружение:
+   - Windows: `venv\Scripts\activate`
+   - Linux/Mac: `source venv/bin/activate`
+
+4. Установите зависимости:
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Создайте файл `.env` с настройками базы данных:
-```
-DATABASE_URL=postgresql://user:password@localhost:5432/learning_platform
-```
-
 5. Запустите сервер:
 ```bash
-uvicorn app:app --reload
+uvicorn main:app --reload
 ```
 
-API будет доступен по адресу: `http://localhost:8000`
+Backend будет доступен по адресу: http://localhost:8000
 
-Документация API (Swagger): `http://localhost:8000/docs`
+API документация: http://localhost:8000/docs
 
-## Структура проекта
+### Frontend
 
-- `app.py` - главный файл с эндпоинтами FastAPI
-- `models.py` - модели базы данных (SQLAlchemy)
-- `schemas.py` - схемы Pydantic для валидации
-- `database.py` - настройка подключения к БД (PostgreSQL)
-- `auth.py` - аутентификация и авторизация (JWT)
-- `services.py` - бизнес-логика
-- `websocket_manager.py` - менеджер WebSocket соединений для уведомлений
+1. Откройте новый терминал и перейдите в папку frontend:
+```bash
+cd frontend
+```
 
-## Основные эндпоинты
+2. Установите зависимости:
+```bash
+npm install
+```
 
-### Аутентификация
-- `POST /register` - регистрация нового пользователя
-- `POST /token` - получение JWT токена
-- `GET /me` - информация о текущем пользователе
+3. Запустите dev сервер:
+```bash
+npm run dev
+```
 
-### Треки
-- `GET /tracks` - список всех треков
-- `GET /tracks/my` - треки текущего пользователя
-- `GET /tracks/{track_id}` - информация о треке
-- `POST /tracks/{track_id}/enroll` - записаться на трек
-- `DELETE /tracks/{track_id}/enroll` - выйти из трека
+Frontend будет доступен по адресу: http://localhost:5173
 
-### Задания
-- `GET /tracks/{track_id}/assignments` - список заданий трека
-- `GET /tracks/{track_id}/assignments/current` - текущее доступное задание
-- `POST /assignments/{assignment_id}/submit` - отправить решение
+## Проверка работы
 
-### Код-ривью
-- `GET /assignments/{assignment_id}/review/submission` - получить случайное submission для ревью
-- `POST /submissions/{submission_id}/review` - создать код-ривью
+### 1. Регистрация и вход
 
-### WebSocket
-- `WS /ws/{token}` - подключение для получения уведомлений о дедлайнах
+1. Откройте http://localhost:5173
+2. Зарегистрируйтесь (email и пароль)
+3. Войдите в систему
 
-### Дневник
-- `POST /assignments/{assignment_id}/diary` - создать запись в дневнике
-- `GET /assignments/{assignment_id}/diary` - получить записи дневника
+### 2. Создание трека (через API)
+
+Для создания трека используйте Swagger UI (http://localhost:8000/docs) или curl:
+
+```bash
+# Сначала получите токен
+curl -X POST "http://localhost:8000/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=your@email.com&password=yourpassword"
+
+# Создайте трек (замените YOUR_TOKEN)
+curl -X POST "http://localhost:8000/tracks" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Python Basics",
+    "description": "Learn Python programming",
+    "quota": 3,
+    "criteria": "Code quality, tests, documentation",
+    "assignments": [
+      {
+        "title": "Task 1",
+        "description": "Create a calculator",
+        "deadline_days": 7,
+        "order": 1
+      },
+      {
+        "title": "Task 2",
+        "description": "Build a REST API",
+        "deadline_days": 10,
+        "order": 2
+      }
+    ]
+  }'
+```
+
+### 3. Тестирование функционала
+
+1. **Просмотр треков**: После входа вы увидите список треков
+2. **Запись на трек**: Нажмите "Join" на треке
+3. **Начало трека**: Когда наберется нужное количество участников, трек автоматически начнется
+4. **Выполнение заданий**: 
+   - Откройте трек
+   - Выберите задание
+   - Отправьте ссылку на репозиторий
+5. **Код-ривью**: После дедлайна нажмите "Start Code Review" и оцените работу
+6. **Дневник**: Добавляйте комментарии под заданиями
+
+### 4. Проверка уведомлений
+
+Уведомления обновляются каждую минуту. Они появляются:
+- За 2 дня до дедлайна
+- Когда начинается этап код-ривью
+
+## Основные эндпоинты API
+
+- `POST /register` - Регистрация
+- `POST /token` - Получение JWT токена
+- `GET /tracks` - Список треков
+- `POST /tracks` - Создание трека
+- `POST /tracks/{id}/join` - Запись на трек
+- `POST /tracks/{id}/leave` - Выход с трека
+- `GET /tracks/{id}/assignments` - Задания трека
+- `POST /assignments/{id}/submit` - Отправка решения
+- `GET /assignments/{id}/review` - Получить работу для ревью
+- `POST /submissions/{id}/review` - Отправить ревью
+- `GET /assignments/{id}/comments` - Комментарии к заданию
+- `POST /assignments/{id}/comments` - Добавить комментарий
+- `GET /notifications` - Уведомления
 
 ## База данных
 
-Используется PostgreSQL. Настройки подключения задаются через переменную окружения `DATABASE_URL` в файле `.env`.
+Используется SQLite (файл `backend/app.db`). База создается автоматически при первом запуске.
 
-Пример `.env`:
-```
-DATABASE_URL=postgresql://user:password@localhost:5432/learning_platform
-```
+## Примечания
 
-Таблицы создаются автоматически при первом запуске.
-
-## Безопасность
-
-⚠️ **Важно**: В продакшене обязательно измените `SECRET_KEY` в `auth.py` на безопасный случайный ключ!
-
-## Примеры использования
-
-### Регистрация
-```bash
-curl -X POST "http://localhost:8000/register" \
-  -H "Content-Type: application/json" \
-  -d '{"email": "user@example.com", "username": "user", "password": "password123"}'
-```
-
-### Вход
-```bash
-curl -X POST "http://localhost:8000/token" \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "username=user&password=password123"
-```
-
-### Получение списка треков (требует авторизации)
-```bash
-curl -X GET "http://localhost:8000/tracks" \
-  -H "Authorization: Bearer YOUR_TOKEN"
-```
-
-## Логика работы
-
-1. **Регистрация**: Пользователь регистрируется с email, username и password
-2. **Треки**: Пользователь может просматривать треки и записываться на них
-3. **Запуск трека**: Трек автоматически запускается, когда набирается нужное количество участников
-4. **Задания**: После запуска трека участники последовательно выполняют задания
-5. **Дедлайн**: На каждое задание дается определенное количество часов
-6. **Уведомление**: При 80% времени до дедлайна отправляется WebSocket уведомление
-7. **Код-ривью**: После дедлайна начинается этап код-ривью, где каждый должен оценить 3 случайных участника по фиксированным критериям
-8. **Следующее задание**: Доступ к следующему заданию открывается только после завершения всех 3 код-ривью
+- Для продакшена измените `SECRET_KEY` в `backend/auth.py`
+- Уведомления работают через polling (каждую минуту)
+- Критерии оценки задаются при создании трека в поле `criteria`
+- Дедлайны настраиваются в днях при создании заданий
 

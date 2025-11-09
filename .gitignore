@@ -26,11 +26,6 @@ env/
 ENV/
 .venv
 
-# Environment variables
-.env
-.env.local
-.env.*.local
-
 # Database
 *.db
 *.sqlite
@@ -42,22 +37,44 @@ ENV/
 *.swp
 *.swo
 *~
-
-# OS
 .DS_Store
-Thumbs.db
+
+# Environment variables
+.env
+.env.local
+.env.*.local
 
 # Logs
 *.log
+logs/
 
-# Testing
+# FastAPI
 .pytest_cache/
 .coverage
 htmlcov/
 
-# Alembic
-alembic/versions/*.pyc
+# Node.js / Frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 
+# Build outputs
+frontend/dist/
+frontend/build/
+*.tsbuildinfo
 
+# Vite
+frontend/.vite/
+frontend/dist/
 
+# OS
+Thumbs.db
+.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
 
